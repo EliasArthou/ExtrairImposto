@@ -176,26 +176,27 @@ def extrairboletos(visual):
                                                                     baixado = aux.ultimoarquivo(pastadownload, '.pdf')
                                                                     if 'DARM_' not in baixado:
                                                                         baixado = ''
-
                                                                     if len(baixado) > 0:
                                                                         aux.renomeararquivo(baixado, pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf')
 
                                             if os.path.isfile(pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf'):
                                                 for dicionario in listaexcel:
-                                                    dicionario.update({'Status': 'Ok'})
+                                                    if dicionario['Código Cliente'] == codigocliente and dicionario['Inscrição'] == linha['iptu']:
+                                                        dicionario.update({'Status': 'Ok'})
                                             else:
                                                 for dicionario in listaexcel:
-                                                    dicionario.update({'Status': 'Verificar'})
+                                                    if dicionario['Código Cliente'] == codigocliente and dicionario['Inscrição'] == linha['iptu']:
+                                                        dicionario.update({'Status': 'Verificar'})
 
                                             if site is not None:
                                                 site.fecharsite()
                                     else:
-                                        dadosiptu = [codigocliente, linha['iptu'], '', '', '', '', '', 'Sem Guia (Provável Isento)']
+                                        dadosiptu = [codigocliente, linha['iptu'], '', '', '', '', '', 'Sem Guia (Provável Isento)', 'Não se aplica']
                                         listaexcel.append(dict(zip(listachaves, dadosiptu)))
                                         site.fecharsite()
 
                                 else:
-                                    dadosiptu = [codigocliente, linha['iptu'], '', '', '', '', '', mensagemerro.text]
+                                    dadosiptu = [codigocliente, linha['iptu'], '', '', '', '', '', mensagemerro.text, 'Verificar']
                                     listaexcel.append(dict(zip(listachaves, dadosiptu)))
                                     site.fecharsite()
 
