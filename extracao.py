@@ -66,7 +66,7 @@ def extrairboletos(visual):
         bd.fecharbanco()
 
         pastadownload = aux.caminhoprojeto() + '\\' + 'Downloads'
-        listachaves = ['Código Cliente', 'Inscrição', 'Guia do Exercício', 'Nr Guia', 'Valor', 'Contribuinte', 'Endereço']
+        listachaves = ['Código Cliente', 'Inscrição', 'Guia do Exercício', 'Nr Guia', 'Valor', 'Contribuinte', 'Endereço', 'Status']
         listaexcel = []
         site = web.TratarSite(senha.site, 'ExtrairBoletoIPTU')
 
@@ -97,18 +97,25 @@ def extrairboletos(visual):
                         inscricao.clear()
                         inscricao.send_keys(linha['iptu'])
                         if site.url == senha.site:
-                            botaogerar = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_DefiniGuia')
+                            botaogerar = site.verificarobjetoexiste('XPATH', '/html/body/form/div[3]/div[3]/div[2]/div/input[1]')
                             if botaogerar is not None:
-                                botaogerar.click()
+                                if getattr(sys, 'frozen', False):
+                                    botaogerar.click()
+                                else:
+                                    site.navegador.execute_script("arguments[0].click()", botaogerar)
+
                                 mensagemerro = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_MSG')
                                 if mensagemerro is None:
                                     site.delay = 2
-                                    mensagemerro = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_TELA_M1')
+                                    mensagemguia = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_TELA_M1')
                                     site.delay = 10
-                                    if mensagemerro is None:
+                                    if mensagemguia is None:
                                         guia = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_TELA_Guia1')
                                         if guia is not None:
-                                            guia.click()
+                                            if getattr(sys, 'frozen', False):
+                                                guia.click()
+                                            else:
+                                                site.navegador.execute_script("arguments[0].click()", guia)
                                             guiaexercicio = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_GuiaExercicio')
                                             if guiaexercicio is None:
                                                 guiaexercicio = ''
@@ -139,7 +146,6 @@ def extrairboletos(visual):
 
                                                 case '2' | '3' | '4':
                                                     idselecionado = 'ctl00_ePortalContent_Chk_00' + str(int(resposta) - 1)
-
                                                     if resposta == '2':
                                                         namevalor = 'Valor_Prim'
                                                     elif resposta == '3':
@@ -157,16 +163,22 @@ def extrairboletos(visual):
                                                     idselecionado = ''
 
                                             if gerarboleto:
+                                                # site.mexerzoom(0.5)
                                                 cota = site.verificarobjetoexiste('ID', idselecionado, iraoobjeto=True)
                                                 if cota is not None:
-                                                    site.descerrolagem()
+                                                    # site.descerrolagem()
                                                     botaogerar = site.verificarobjetoexiste('ID', botaogerarid, iraoobjeto=True)
                                                     if botaogerar is not None:
                                                         confirmar = site.verificarobjetoexiste('ID', 'popup_ok')
                                                         if confirmar is not None:
-                                                            confirmar.click()
+                                                            if getattr(sys, 'frozen', False):
+                                                                confirmar.click()
+                                                            else:
+                                                                site.navegador.execute_script("arguments[0].click()", confirmar)
+
                                                             if site.navegador.current_url == senha.telaboleto:
-                                                                site.descerrolagem()
+                                                                # site.mexerzoom(0.5)
+                                                                # site.descerrolagem()
                                                                 imprimir = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_ImprimirDARM',
                                                                                                       iraoobjeto=True)
 
@@ -191,12 +203,44 @@ def extrairboletos(visual):
                                             if site is not None:
                                                 site.fecharsite()
                                     else:
-                                        dadosiptu = [codigocliente, linha['iptu'], '', '', '', '', '', 'Sem Guia (Provável Isento)', 'Não se aplica']
+                                        valorimpostotela = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_TELA_Valor1')
+                                        if valorimpostotela is not None:
+                                            valor = valorimpostotela.text
+                                            valor = valor.replace('.', '')
+                                            valor = valor.replace(',', '.')
+                                        else:
+                                            valor = 0
+
+                                        guiaexercicio = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_TELA_Guia1')
+                                        if guiaexercicio is None:
+                                            guiaexercicio = ''
+                                        else:
+                                            guiaexercicio = guiaexercicio.text
+
+                                        contribuinte = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_TELA_CONTRIBUINTE')
+                                        if contribuinte is None:
+                                            contribuinte = ''
+                                        else:
+                                            contribuinte = contribuinte.text
+
+                                        endereco = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_TELA_ENDERECO')
+                                        if endereco is None:
+                                            endereco = ''
+                                        else:
+                                            endereco = endereco.text
+
+                                        if valorimpostotela is None or float(valor) == 0:
+                                            dadosiptu = [codigocliente, linha['iptu'], guiaexercicio, '0', '0,00', contribuinte, endereco, 'Sem Guia (Provável Isento)']
+                                        else:
+                                            dadosiptu = [codigocliente, linha['iptu'], guiaexercicio, '0', valorimpostotela.text, contribuinte, endereco,
+                                                         'Sem Guia (Provável Isento)']
+
                                         listaexcel.append(dict(zip(listachaves, dadosiptu)))
-                                        site.fecharsite()
+                                        if site is not None:
+                                            site.fecharsite()
 
                                 else:
-                                    dadosiptu = [codigocliente, linha['iptu'], '', '', '', '', '', mensagemerro.text, 'Verificar']
+                                    dadosiptu = [codigocliente, linha['iptu'], '', '', '', '', '', mensagemerro.text]
                                     listaexcel.append(dict(zip(listachaves, dadosiptu)))
                                     site.fecharsite()
 

@@ -1,5 +1,6 @@
 from selenium import webdriver
 import io
+import sys
 from PIL import Image
 import os
 from selenium.common.exceptions import NoSuchElementException
@@ -16,7 +17,7 @@ from subprocess import CREATE_NO_WINDOW
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.action_chains import ActionChains
+# from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 
 
@@ -37,8 +38,10 @@ class TratarSite:
         """
         :return: navegador conifugrado com o site desejado aberto
         """
-        self.navegador = self.configuraprofilechrome()
+        if self.navegador is not None:
+            self.fecharsite()
 
+        self.navegador = self.configuraprofilechrome()
         if self.navegador is not None:
             self.navegador.get(self.url)
             time.sleep(1)
@@ -98,7 +101,6 @@ class TratarSite:
         """
         if self.navegador is not None:
             try:
-
                 if itemunico:
                     if len(valorselecao) == 0:
                         elemento = WebDriverWait(self.navegador, self.delay).until(EC.visibility_of_element_located((getattr(By, identificador), endereco)))
@@ -116,8 +118,11 @@ class TratarSite:
                         elemento.select_by_value(valorselecao)
 
                 if iraoobjeto and elemento is not None:
-                    action = ActionChains(self.navegador)
-                    action.move_to_element(elemento).click().perform()
+                    # action = ActionChains(self.navegador)
+                    # if getattr(sys, 'frozen', False):
+                    #    action.move_to_element(elemento).click().perform()
+                    # else:
+                    self.navegador.execute_script("arguments[0].click()", elemento)
 
                 return elemento
 
@@ -125,7 +130,7 @@ class TratarSite:
                 return None
 
             except TimeoutException:
-                #messagebox.msgbox('Erro de carregamento objeto!', messagebox.MB_OK, 'Erro Carregamento')
+                # messagebox.msgbox('Erro de carregamento objeto!', messagebox.MB_OK, 'Erro Carregamento')
                 return None
 
     def descerrolagem(self):
@@ -134,6 +139,14 @@ class TratarSite:
         """
         self.navegador.execute_script("window.scrollTo(0,document.body.scrollHeight)")
         time.sleep(1)
+
+    def mexerzoom(self, valor):
+        """
+        Desce a barra de rolagem do navegador
+        """
+        self.navegador.execute_script("document.body.style.transform='scale(" + str(valor) + ")';")
+        time.sleep(1)
+
 
     def baixarimagem(self, identificador, endereco, caminho):
         """
