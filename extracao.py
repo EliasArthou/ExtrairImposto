@@ -82,6 +82,8 @@ def extrairboletos(visual):
             time.sleep(0.1)
             # ==================== Parte Gráfica =======================================================
             if not os.path.isfile(pastadownload + '\\' + linha['codigo'] + '_' + linha['iptu'] + '.pdf') or not gerarboleto:
+                if site is not None:
+                    site.fecharsite()
                 site = web.TratarSite(senha.site, 'ExtrairBoletoIPTU')
                 site.abrirnavegador()
                 if site.url != senha.site or site is None:
@@ -177,8 +179,6 @@ def extrairboletos(visual):
                                                                 site.navegador.execute_script("arguments[0].click()", confirmar)
 
                                                             if site.navegador.current_url == senha.telaboleto:
-                                                                # site.mexerzoom(0.5)
-                                                                # site.descerrolagem()
                                                                 imprimir = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_ImprimirDARM',
                                                                                                       iraoobjeto=True)
 
@@ -189,10 +189,29 @@ def extrairboletos(visual):
                                                                     if 'DARM_' not in baixado:
                                                                         baixado = ''
                                                                     if len(baixado) > 0:
-                                                                        aux.renomeararquivo(baixado, pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf')
+                                                                        caminhodestino = pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf'
+                                                                        caminhodestino = aux.to_raw(caminhodestino)
+                                                                        aux.adicionarcabecalhopdf(baixado, caminhodestino, codigocliente)
+                                                                        #listacodigo = []
+                                                                        #listatipopag = []
+                                                                        #listaarquivo = []
+
+                                                                        #df = aux.extrairtextopdf(caminhodestino)
+                                                                        #total_rows = df[df.columns[0]].count()
+                                                                        #for linha in range(total_rows):
+                                                                        #    listacodigo.append(codigocliente)
+                                                                        #    listatipopag.append('PARCELADO')
+                                                                        #    listaarquivo.append(caminhodestino)
+
+                                                                        #df.insert(loc=0, column='Codigo', value=listacodigo)
+                                                                        #df.insert(loc=4, column='TpoPagto', value=listatipopag)
+                                                                        #df.insert(loc=5, column='Arquivo', value=listaarquivo)
+
+                                                                        #aux.renomeararquivo(baixado, pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf')
 
                                             if os.path.isfile(pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf'):
                                                 for dicionario in listaexcel:
+
                                                     if dicionario['Código Cliente'] == codigocliente and dicionario['Inscrição'] == linha['iptu']:
                                                         dicionario.update({'Status': 'Ok'})
                                             else:
@@ -233,7 +252,7 @@ def extrairboletos(visual):
                                             dadosiptu = [codigocliente, linha['iptu'], guiaexercicio, '0', '0,00', contribuinte, endereco, 'Sem Guia (Provável Isento)']
                                         else:
                                             dadosiptu = [codigocliente, linha['iptu'], guiaexercicio, '0', valorimpostotela.text, contribuinte, endereco,
-                                                         'Sem Guia (Provável Isento)']
+                                                         'Verificar (Extrair Manualmente)']
 
                                         listaexcel.append(dict(zip(listachaves, dadosiptu)))
                                         if site is not None:

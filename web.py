@@ -13,7 +13,6 @@ import messagebox
 import sensiveis as senhas
 from subprocess import CREATE_NO_WINDOW
 
-
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -36,7 +35,7 @@ class TratarSite:
 
     def abrirnavegador(self):
         """
-        :return: navegador conifugrado com o site desejado aberto
+        :return: navegador configurado com o site desejado aberto
         """
         if self.navegador is not None:
             self.fecharsite()
@@ -72,7 +71,7 @@ class TratarSite:
             self.options.add_argument("--disable-print-preview")
             self.options.add_argument("--silent")
             # Forma invisível
-            # self.options.add_argument("--headless")
+            self.options.add_argument("--headless")
 
             if aux.caminhoprojeto('Downloads') != '':
                 self.options.add_experimental_option('prefs', {
@@ -146,7 +145,6 @@ class TratarSite:
         """
         self.navegador.execute_script("document.body.style.transform='scale(" + str(valor) + ")';")
         time.sleep(1)
-
 
     def baixarimagem(self, identificador, endereco, caminho):
         """

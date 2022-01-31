@@ -88,8 +88,8 @@ class Banco:
 
     def __init__(self, caminho):
         constr = 'Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=' + caminho + ';Pwd=' + senha.senhabanco
-        conxn = pyodbc.connect(constr)
-        self.cursor = conxn.cursor()
+        self.conxn = pyodbc.connect(constr)
+        self.cursor = self.conxn.cursor()
 
     def consultar(self, sql):
         """
@@ -100,6 +100,19 @@ class Banco:
         self.cursor.execute(sql)
         resultado = self.cursor.fetchall()
         return resultado
+
+    def adicionardf(self, tabela, df):
+
+        #df.to_csv('df.csv', sep=';', encoding='utf-8', index=False)
+
+        # RUN QUERY
+        strSQL = "INSERT INTO %s SELECT * FROM [text;HDR=Yes;FMT=Delimited(;);Database=D:\Projetos\Extrair Imposto\].df.csv" % tabela
+
+        self.cursor.execute(strSQL)
+        self.conxn.commit()
+
+        self.conxn.close()  # CLOSE CONNECTION
+        os.remove('df.csv')
 
     def fecharbanco(self):
         """
@@ -355,3 +368,148 @@ def mid(s, offset, amount):
     :return:
     """
     return s[(offset - 1):(offset - 1) + amount]
+
+
+def adicionarcabecalhopdf(arquivo, arquivodestino, cabecalho):
+    """
+    :param arquivo: arquivo PDF de "entrada".
+    :param arquivodestino: arquivo PDF de saída (já com o cabeçalho).
+    :param cabecalho: texto do cabeçalho a ser adicionado.
+    :return:
+    """
+    import PyPDF2
+    import io
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.pdfbase import pdfmetrics
+
+    packet = io.BytesIO()
+    pdfmetrics.registerFont(TTFont('Arial', 'arial-bold.ttf'))
+    can = canvas.Canvas(packet, pagesize=letter)
+    can.setFont('Arial', 10)
+    can.drawString(300, 820, cabecalho)
+    can.save()
+
+    # move to the beginning of the StringIO buffer
+    packet.seek(0)
+
+    # create a new PDF with Reportlab
+    new_pdf = PyPDF2.PdfFileReader(packet)
+    # read your existing PDF
+    with open(arquivo, 'rb') as p:
+        existing_pdf = (p.readlines())
+    arquivopdf = reset_eof_of_pdf_return_stream(existing_pdf)
+    arquivoacertado = mid(arquivo, 1, len(arquivo) - 4) + "_acertado" + right(arquivo, 4)
+    if os.path.isfile(arquivoacertado):
+        os.remove(arquivoacertado)
+    # write to new pdf
+    with open(arquivoacertado, 'wb') as f:
+        f.writelines(arquivopdf)
+
+    if os.path.isfile(arquivoacertado) and os.path.isfile(arquivo):
+        os.remove(arquivo)
+
+    renomeararquivo(arquivoacertado, arquivo)
+
+    if os.path.isfile(arquivoacertado):
+        os.remove(arquivoacertado)
+
+    existing_pdf = PyPDF2.PdfFileReader(arquivo)
+
+    output = PyPDF2.PdfFileWriter()
+    # add the "watermark" (which is the new pdf) on the existing page
+    paginas = existing_pdf.getNumPages()
+    for pagina in range(paginas):
+        page = existing_pdf.getPage(pagina)
+        if pagina == 0:
+            page.mergePage(new_pdf.getPage(pagina))
+        output.addPage(page)
+    # finally, write "output" to a real file
+    outputStream = open(arquivodestino, "wb")
+    output.write(outputStream)
+    outputStream.close()
+    if os.path.isfile(arquivo):
+        os.remove(arquivo)
+
+
+def reset_eof_of_pdf_return_stream(pdf_stream_in: list):
+    # find the line position of the EOF
+    for i, x in enumerate(pdf_stream_in[::-1]):
+        if b'%%EOF' in x:
+            actual_line = len(pdf_stream_in) - i
+            # print(f'EOF found at line position {-i} = actual {actual_line}, with value {x}')
+            break
+
+    # return the list up to that point
+    return pdf_stream_in[:actual_line]
+
+
+def extrairtextopdf(caminho):
+    import PyPDF2
+    import re
+    import pandas as pd
+
+    texto = ''
+    reader = PyPDF2.PdfFileReader(caminho)
+    for pagina in range(reader.getNumPages()):
+        p = reader.getPage(pagina)
+        texto += p.extractText()
+
+    lista = re.findall(r'([\d].[\d]{3}.[\d]{3}-[\d])[\d]{2}', texto)
+    listalimpa = []
+    for indice, linha in enumerate(lista):
+        if indice % 2:
+            linha = linha.replace('.', '')
+            linha = linha.replace('-', '')
+            listalimpa.append(linha)
+    df = pd.DataFrame(listalimpa, columns=['Inscricao'])
+
+    lista = re.findall(r'COMPETÊNCIA([\d]{4})[\d]{2}', texto)
+    listalimpa = []
+    for indice, linha in enumerate(lista):
+        if indice % 2:
+            listalimpa.append(linha)
+    df['Competencia'] = listalimpa
+
+    lista = re.findall(r'([\d]{2}/[\d]{2}/[\d]{4})[\d]{2}', texto)
+    listalimpa = []
+    for indice, linha in enumerate(lista):
+        if indice % 2:
+            listalimpa.append(linha)
+    df['Vencimentos'] = listalimpa
+
+    lista = re.findall(r'CONTRIBUINTE([\D]*)[\d]{2}.', texto)
+    listalimpa = []
+    for indice, linha in enumerate(lista):
+        if indice % 2:
+            listalimpa.append(linha)
+    df['Contribuinte'] = listalimpa
+
+    lista = re.findall(r'AUTENTICAÇÃO AUTOMÁTICA[\D]PARA USO DO BANCO[\D]([\d]{11}.[\d] [\d]{11}.[\d] [\d]{11}.[\d] [\d]{11}.[\d])[\D]', texto)
+    df['Codigo de Barras'] = lista
+
+    lista = re.findall(r'GUIA/COTA([\d]{2}/[\d]{2})', texto)
+    listalimpa = []
+    for indice, linha in enumerate(lista):
+        if indice % 2:
+            listalimpa.append(linha)
+    df['Guia'] = listalimpa
+
+
+    lista = re.findall(r'VALOR TOTAL([\d]*,[\d]{2})[\d]{2}.', texto)
+    listalimpa = []
+    for indice, linha in enumerate(lista):
+        if indice % 2:
+            listalimpa.append(linha)
+    df['Valor Total'] = listalimpa
+
+    lista = re.findall(r'GUIA/COTA[\d]{2}/([\d]{2})', texto)
+    listalimpa = []
+    for indice, linha in enumerate(lista):
+        if indice % 2:
+            listalimpa.append(str(int(linha)))
+    df['Parcela'] = listalimpa
+
+
+    return df
