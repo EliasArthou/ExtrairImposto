@@ -26,6 +26,7 @@ def extrairboletos(visual):
 
     try:
         gerarboleto = not visual.var1.get()
+        salvardadospdf = not visual.var2.get()
 
         visual.acertaconfjanela(False)
 
@@ -181,7 +182,6 @@ def extrairboletos(visual):
                                                             if site.navegador.current_url == senha.telaboleto:
                                                                 imprimir = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_ImprimirDARM',
                                                                                                       iraoobjeto=True)
-
                                                                 if imprimir is not None:
                                                                     visual.mudartexto('labelstatus', 'Salvando Boleto...')
                                                                     site.esperadownloads(pastadownload, 10)
@@ -192,21 +192,23 @@ def extrairboletos(visual):
                                                                         caminhodestino = pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf'
                                                                         caminhodestino = aux.to_raw(caminhodestino)
                                                                         aux.adicionarcabecalhopdf(baixado, caminhodestino, codigocliente)
-                                                                        #listacodigo = []
-                                                                        #listatipopag = []
-                                                                        #listaarquivo = []
+                                                                        if salvardadospdf:
+                                                                            listacodigo = []
+                                                                            listatipopag = []
+                                                                            listaarquivo = []
 
-                                                                        #df = aux.extrairtextopdf(caminhodestino)
-                                                                        #total_rows = df[df.columns[0]].count()
-                                                                        #for linha in range(total_rows):
-                                                                        #    listacodigo.append(codigocliente)
-                                                                        #    listatipopag.append('PARCELADO')
-                                                                        #    listaarquivo.append(caminhodestino)
+                                                                            df = aux.extrairtextopdf(caminhodestino)
+                                                                            total_rows = df[df.columns[0]].count()
+                                                                            for linha in range(total_rows):
+                                                                                listacodigo.append(codigocliente)
+                                                                                listatipopag.append('PARCELADO')
+                                                                                listaarquivo.append(caminhodestino)
 
-                                                                        #df.insert(loc=0, column='Codigo', value=listacodigo)
-                                                                        #df.insert(loc=4, column='TpoPagto', value=listatipopag)
-                                                                        #df.insert(loc=5, column='Arquivo', value=listaarquivo)
+                                                                            df.insert(loc=0, column='Codigo', value=listacodigo)
+                                                                            df.insert(loc=4, column='TpoPagto', value=listatipopag)
+                                                                            df.insert(loc=5, column='Arquivo', value=listaarquivo)
 
+                                                                            bd.adicionardf('Codigos IPTUs', df, 8)
                                                                         #aux.renomeararquivo(baixado, pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf')
 
                                             if os.path.isfile(pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf'):

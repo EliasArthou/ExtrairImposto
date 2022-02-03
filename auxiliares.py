@@ -101,8 +101,20 @@ class Banco:
         resultado = self.cursor.fetchall()
         return resultado
 
-    def adicionardf(self, tabela, df):
+    def adicionardf(self, tabela, df, indicelimpeza=-1):
+        for linha in df.values:
+            my_list = [str(x) for x in linha]
+            if len(my_list) > 0:
+                if indicelimpeza != -1:
+                    strSQL = "DELETE * FROM %s WHERE Barras = %s" % (tabela, my_list[indicelimpeza])
+                    self.cursor.execute(strSQL)
+                    self.conxn.commit()
 
+                strSQL = "INSERT INTO %s VALUES" % tabela + "('" + "', '".join(my_list) + "')"
+                self.cursor.execute(strSQL)
+                self.conxn.commit()
+
+            print("('" + "', '".join(my_list) + "')")
         #df.to_csv('df.csv', sep=';', encoding='utf-8', index=False)
 
         # RUN QUERY
@@ -462,6 +474,7 @@ def extrairtextopdf(caminho):
         if indice % 2:
             linha = linha.replace('.', '')
             linha = linha.replace('-', '')
+            linha = linha.replace('\n', '')
             listalimpa.append(linha)
     df = pd.DataFrame(listalimpa, columns=['Inscricao'])
 
@@ -469,21 +482,21 @@ def extrairtextopdf(caminho):
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
-            listalimpa.append(linha)
+            listalimpa.append(linha.replace('\n', ''))
     df['Competencia'] = listalimpa
 
     lista = re.findall(r'([\d]{2}/[\d]{2}/[\d]{4})[\d]{2}', texto)
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
-            listalimpa.append(linha)
+            listalimpa.append(linha.replace('\n', ''))
     df['Vencimentos'] = listalimpa
 
     lista = re.findall(r'CONTRIBUINTE([\D]*)[\d]{2}.', texto)
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
-            listalimpa.append(linha)
+            listalimpa.append(linha.replace('\n', ''))
     df['Contribuinte'] = listalimpa
 
     lista = re.findall(r'AUTENTICAÇÃO AUTOMÁTICA[\D]PARA USO DO BANCO[\D]([\d]{11}.[\d] [\d]{11}.[\d] [\d]{11}.[\d] [\d]{11}.[\d])[\D]', texto)
@@ -493,9 +506,8 @@ def extrairtextopdf(caminho):
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
-            listalimpa.append(linha)
+            listalimpa.append(linha.replace('\n', ''))
     df['Guia'] = listalimpa
-
 
     lista = re.findall(r'VALOR TOTAL([\d]*,[\d]{2})[\d]{2}.', texto)
     listalimpa = []
