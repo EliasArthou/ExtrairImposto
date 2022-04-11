@@ -68,7 +68,6 @@ class App(tk.Tk):
         self.c1 = tk.Checkbutton(self, text='Subir Código de Barras', variable=self.var2, onvalue=True, offvalue=False, font="Arial 10")
         self.c1.place(relx=0.45, y=135)
 
-
         self.radio_valor = tk.IntVar()
         self.radio_valor.set(2)  # Para a segunda opção ficar marcada
         self.manipularradio()

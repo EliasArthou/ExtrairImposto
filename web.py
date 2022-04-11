@@ -71,7 +71,7 @@ class TratarSite:
             self.options.add_argument("--disable-print-preview")
             self.options.add_argument("--silent")
             # Forma invisível
-            self.options.add_argument("--headless")
+            # self.options.add_argument("--headless")
 
             if aux.caminhoprojeto('Downloads') != '':
                 self.options.add_experimental_option('prefs', {

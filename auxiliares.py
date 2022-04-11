@@ -87,9 +87,15 @@ class Banco:
     """
 
     def __init__(self, caminho):
-        constr = 'Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=' + caminho + ';Pwd=' + senha.senhabanco
-        self.conxn = pyodbc.connect(constr)
-        self.cursor = self.conxn.cursor()
+        self.conxn = None
+        self.cursor = None
+        self.constr = 'Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=' + caminho + ';Pwd=' + senha.senhabanco
+        self.abrirconexao()
+
+    def abrirconexao(self):
+        if len(self.constr) > 0:
+            self.conxn = pyodbc.connect(self.constr)
+            self.cursor = self.conxn.cursor()
 
     def consultar(self, sql):
         """
@@ -106,19 +112,20 @@ class Banco:
             my_list = [str(x) for x in linha]
             if len(my_list) > 0:
                 if indicelimpeza != -1:
-                    strSQL = "DELETE * FROM %s WHERE Barras = %s" % (tabela, my_list[indicelimpeza])
+                    self.abrirconexao()
+                    strSQL = "DELETE * FROM [%s] WHERE Barras = '%s'" % (tabela, my_list[indicelimpeza])
                     self.cursor.execute(strSQL)
                     self.conxn.commit()
 
-                strSQL = "INSERT INTO %s VALUES" % tabela + "('" + "', '".join(my_list) + "')"
+                strSQL = "INSERT INTO %s VALUES [" % tabela + "] ('" + "', '".join(my_list) + "')"
                 self.cursor.execute(strSQL)
                 self.conxn.commit()
 
             print("('" + "', '".join(my_list) + "')")
-        #df.to_csv('df.csv', sep=';', encoding='utf-8', index=False)
+        # df.to_csv('df.csv', sep=';', encoding='utf-8', index=False)
 
         # RUN QUERY
-        strSQL = "INSERT INTO %s SELECT * FROM [text;HDR=Yes;FMT=Delimited(;);Database=D:\Projetos\Extrair Imposto\].df.csv" % tabela
+        strSQL = "INSERT INTO %s SELECT * FROM [text;HDR=Yes;FMT=Delimited(;);Database=D:\Projetos\Extrair Imposto].[df.csv]" % tabela
 
         self.cursor.execute(strSQL)
         self.conxn.commit()
@@ -522,6 +529,5 @@ def extrairtextopdf(caminho):
         if indice % 2:
             listalimpa.append(str(int(linha)))
     df['Parcela'] = listalimpa
-
 
     return df
