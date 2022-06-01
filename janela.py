@@ -5,7 +5,7 @@ Constrói a janela
 import sys
 import tkinter as tk
 from tkinter import ttk
-from extracao import extrairboletos
+from extracao import extrairboletos, extrairnadaconsta
 
 
 class App(tk.Tk):
@@ -120,7 +120,8 @@ class App(tk.Tk):
         Ação do botão
         """
         self.manipularradio(False)
-        extrairboletos(self)
+        extrairnadaconsta(self)
+        # extrairboletos(self)
 
     def fechar_clicked(self):
         """

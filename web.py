@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import messagebox
 import sensiveis as senhas
 from subprocess import CREATE_NO_WINDOW
-
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -82,10 +82,10 @@ class TratarSite:
                     "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
                 })
 
-        chrome_service = Service('chromedriver.exe')
-        chrome_service.creationflags = CREATE_NO_WINDOW
+        servico = Service(ChromeDriverManager().install())
+        servico.creationflags = CREATE_NO_WINDOW
 
-        return webdriver.Chrome(options=self.options)
+        return webdriver.Chrome(service=servico, options=self.options)
 
     def verificarobjetoexiste(self, identificador, endereco, valorselecao='', itemunico=True, iraoobjeto=False):
         """
