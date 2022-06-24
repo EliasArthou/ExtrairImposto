@@ -401,19 +401,19 @@ def extrairnadaconsta(visual):
         # ===================================== Parte Gráfica =======================================================
         caminhodestino = pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf'
         if not os.path.isfile(caminhodestino) or not gerarboleto:
-            if site is not None:
-                site.fecharsite()
-            site = web.TratarSite(senha.sitenadaconsta, 'ExtrairBoletoIPTU')
-            site.abrirnavegador()
+            # if site is not None:
+            #     site.fecharsite()
+            # site = web.TratarSite(senha.sitenadaconsta, 'ExtrairBoletoIPTU')
+            # site.abrirnavegador()
             if site.url != senha.sitenadaconsta or site is None:
-                if site is not None:
-                    site.fecharsite()
+                # if site is not None:
+                #     site.fecharsite()
                 site = web.TratarSite(senha.site, senha.nomeprofile)
                 site.abrirnavegador()
 
             if site is not None and site.navegador != -1:
                 # Campo de Inscrição da tela Inicial
-                inscricao = site.verificarobjetoexiste('ID', 'Inscricao')
+                inscricao = site.verificarobjetoexiste('ID', 'ctl00_ePortalContent_inscricao_input')
                 if inscricao is not None:
                     inscricao.clear()
                     inscricao.send_keys(linha['iptu'])
@@ -456,13 +456,13 @@ def extrairnadaconsta(visual):
                                             if dicionario['Código Cliente'] == codigocliente and dicionario['Inscrição'] == linha['iptu']:
                                                 dicionario.update({'Status': 'Verificar'})
 
-                                    if site is not None:
-                                        site.fecharsite()
+                                    # if site is not None:
+                                    #    site.fecharsite()
                                 else:
                                     dadosiptu = [codigocliente, linha['iptu'], '2022', 'Verificar (Extrair Manualmente)']
                                     listaexcel.append(dict(zip(listachaves, dadosiptu)))
-                                    if site is not None:
-                                        site.fecharsite()
+                                    # if site is not None:
+                                    #     site.fecharsite()
 
                             else:
                                 dadosiptu = [codigocliente, linha['iptu'], '2022', mensagemerro.text]
