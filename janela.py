@@ -62,11 +62,15 @@ class App(tk.Tk):
 
         self.var1 = tk.BooleanVar()
         self.c1 = tk.Checkbutton(self, text='Somente Valores', variable=self.var1, onvalue=True, offvalue=False, font="Arial 10")
-        self.c1.place(relx=0.15, y=135)
+        self.c1.place(relx=0.02, y=135)
 
         self.var2 = tk.BooleanVar()
         self.c1 = tk.Checkbutton(self, text='Subir Código de Barras', variable=self.var2, onvalue=True, offvalue=False, font="Arial 10")
-        self.c1.place(relx=0.45, y=135)
+        self.c1.place(relx=0.33, y=135)
+
+        self.var3 = tk.BooleanVar()
+        self.c1 = tk.Checkbutton(self, text='Nada Consta', variable=self.var3, onvalue=True, offvalue=False, font="Arial 10")
+        self.c1.place(relx=0.74, y=135)
 
         self.radio_valor = tk.IntVar()
         self.radio_valor.set(2)  # Para a segunda opção ficar marcada
@@ -120,8 +124,11 @@ class App(tk.Tk):
         Ação do botão
         """
         self.manipularradio(False)
-        extrairnadaconsta(self)
-        # extrairboletos(self)
+        nadaconsta = self.var3.get()
+        if nadaconsta:
+            extrairnadaconsta(self)
+        else:
+            extrairboletos(self)
 
     def fechar_clicked(self):
         """
@@ -190,6 +197,3 @@ class App(tk.Tk):
         # This seems to draw the window frame immediately, so only call deiconify()
         # after setting correct window position
         self.deiconify()
-
-
-

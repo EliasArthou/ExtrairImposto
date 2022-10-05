@@ -66,6 +66,7 @@ def renomeararquivo(nomeantigo, novonome):
     :param nomeantigo: nome do arquivo a ser renomeado (endereço completo).
     :param novonome: nome novo do arquivo (endereço completo).
     """
+    time.sleep(0.5)
     if os.path.isfile(to_raw(novonome)):
         os.remove(to_raw(novonome))
     time.sleep(0.5)
@@ -113,25 +114,26 @@ class Banco:
             if len(my_list) > 0:
                 if indicelimpeza != -1:
                     self.abrirconexao()
-                    strSQL = "DELETE * FROM [%s] WHERE Barras = '%s'" % (tabela, my_list[indicelimpeza])
+                    strSQL = "DELETE * FROM [%s] WHERE Barras = %s" % (tabela, my_list[indicelimpeza])
                     self.cursor.execute(strSQL)
                     self.conxn.commit()
 
-                strSQL = "INSERT INTO %s VALUES [" % tabela + "] ('" + "', '".join(my_list) + "')"
+                strSQL = "INSERT INTO [" + tabela + "] VALUES (%s)" % ', '.join(my_list)
+                print(strSQL)
                 self.cursor.execute(strSQL)
                 self.conxn.commit()
 
-            print("('" + "', '".join(my_list) + "')")
+
         # df.to_csv('df.csv', sep=';', encoding='utf-8', index=False)
 
         # RUN QUERY
-        strSQL = "INSERT INTO %s SELECT * FROM [text;HDR=Yes;FMT=Delimited(;);Database=D:\Projetos\Extrair Imposto].[df.csv]" % tabela
+        # strSQL = "INSERT INTO [%s] SELECT * FROM [text;HDR=Yes;FMT=Delimited(;);Database=D:\Projetos\Extrair Imposto].[df.csv]" % tabela
 
-        self.cursor.execute(strSQL)
-        self.conxn.commit()
+        # self.cursor.execute(strSQL)
+        # self.conxn.commit()
 
         self.conxn.close()  # CLOSE CONNECTION
-        os.remove('df.csv')
+        #os.remove('df.csv')
 
     def fecharbanco(self):
         """
@@ -482,6 +484,7 @@ def extrairtextopdf(caminho):
             linha = linha.replace('.', '')
             linha = linha.replace('-', '')
             linha = linha.replace('\n', '')
+            linha = "'" + linha + "'"
             listalimpa.append(linha)
     df = pd.DataFrame(listalimpa, columns=['Inscricao'])
 
@@ -489,6 +492,7 @@ def extrairtextopdf(caminho):
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
+            linha = "'" + linha + "'"
             listalimpa.append(linha.replace('\n', ''))
     df['Competencia'] = listalimpa
 
@@ -496,30 +500,41 @@ def extrairtextopdf(caminho):
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
+            linha = "'" + linha + "'"
             listalimpa.append(linha.replace('\n', ''))
     df['Vencimentos'] = listalimpa
 
-    lista = re.findall(r'CONTRIBUINTE([\D]*)[\d]{2}.', texto)
+    lista = re.findall(r'CONTRIBUINTE(.*?)\d{2}\.', texto)
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
+            linha = "'" + linha + "'"
             listalimpa.append(linha.replace('\n', ''))
     df['Contribuinte'] = listalimpa
 
     lista = re.findall(r'AUTENTICAÇÃO AUTOMÁTICA[\D]PARA USO DO BANCO[\D]([\d]{11}.[\d] [\d]{11}.[\d] [\d]{11}.[\d] [\d]{11}.[\d])[\D]', texto)
-    df['Codigo de Barras'] = lista
+    listalimpa = []
+    for indice, linha in enumerate(lista):
+        linha = linha.replace(' ', '')
+        linha = linha.replace('.', '')
+        linha = "'" + linha + "'"
+        listalimpa.append(linha)
+    df['Codigo de Barras'] = listalimpa
 
     lista = re.findall(r'GUIA/COTA([\d]{2}/[\d]{2})', texto)
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
+            linha = "'" + linha + "'"
             listalimpa.append(linha.replace('\n', ''))
     df['Guia'] = listalimpa
 
-    lista = re.findall(r'VALOR TOTAL([\d]*,[\d]{2})[\d]{2}.', texto)
+    lista = re.findall(r'VALOR TOTAL([\d|.]*,[\d]{2})[\d]{2}.', texto)
     listalimpa = []
     for indice, linha in enumerate(lista):
         if indice % 2:
+            linha = linha.replace('.', '')
+            linha = linha.replace(',', '.')
             listalimpa.append(linha)
     df['Valor Total'] = listalimpa
 
