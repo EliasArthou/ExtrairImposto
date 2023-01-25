@@ -5,7 +5,7 @@ Constrói a janela
 import sys
 import tkinter as tk
 from tkinter import ttk
-from extracao import extrairboletos, extrairnadaconsta
+from extracao import extrairboletos, extrairnadaconsta, extraircertidaonegativa
 
 
 class App(tk.Tk):
@@ -126,7 +126,8 @@ class App(tk.Tk):
         self.manipularradio(False)
         nadaconsta = self.var3.get()
         if nadaconsta:
-            extrairnadaconsta(self)
+            # extrairnadaconsta(self)
+            extraircertidaonegativa(self)
         else:
             extrairboletos(self)
 
