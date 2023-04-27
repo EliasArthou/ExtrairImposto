@@ -69,10 +69,11 @@ def extrairboletos(visual):
         bd = aux.Banco(caminhobanco)
         indicecliente = str(indicecliente).zfill(4)
         if indicecliente == '0000':
-            resultado = bd.consultar("SELECT * FROM [Lista Codigos IPTUs completa] ORDER BY Codigo")
+            # resultado = bd.consultar("SELECT * FROM [Lista Codigos IPTUs completa] ORDER BY Codigo")
+            resultado = bd.consultar("SELECT * FROM [Lista Codigos IPTUs] ORDER BY Codigo")
         else:
-            resultado = bd.consultar("SELECT * FROM [Lista Codigos IPTUs completa] WHERE Codigo >= '{codigo}' ORDER BY Codigo".format(codigo=indicecliente))
-
+            # resultado = bd.consultar("SELECT * FROM [Lista Codigos IPTUs completa] WHERE Codigo >= '{codigo}' ORDER BY Codigo".format(codigo=indicecliente))
+            resultado = bd.consultar("SELECT * FROM [Lista Codigos IPTUs] WHERE Codigo >= '{codigo}' ORDER BY Codigo".format(codigo=indicecliente))
         bd.fecharbanco()
 
         pastadownload = aux.caminhoprojeto() + '\\' + 'Downloads'
@@ -94,6 +95,7 @@ def extrairboletos(visual):
             caminhodestino = pastadownload + '/' + codigocliente + '_' + linha['iptu'] + '.pdf'
             nomearquivo = codigocliente + '_' + linha['iptu'] + '.pdf'
             mensagemerro = None
+            # Verifica se o arquivo já existe e se não está pedindo pra pegar as informações do site
             if not os.path.isfile(caminhodestino) or not gerarboleto:
                 if site is not None:
                     site.fecharsite()
@@ -223,9 +225,9 @@ def extrairboletos(visual):
                                                     site.navegador.execute_script("arguments[0].click()", confirmar)
 
                                                 if site.navegador.current_url == senha.telaboleto:
-                                                    imprimir = site.verificarobjetoexiste('LINK_TEXT', 'link',
+                                                    imprimir = site.verificarobjetoexiste('LINK_TEXT', 'aqui',
                                                                                           iraoobjeto=True)
-                                                    linkdownload = site.verificarobjetoexiste('LINK_TEXT', 'link')
+                                                    linkdownload = site.verificarobjetoexiste('LINK_TEXT', 'aqui')
                                                     if linkdownload is not None:
                                                         if botaogerar is not None:
                                                             if getattr(sys, 'frozen', False):

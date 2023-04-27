@@ -116,7 +116,7 @@ class Banco:
                     self.abrirconexao()
                     strSQL = "DELETE * FROM [%s] WHERE Barras = %s" % (tabela, my_list[indicelimpeza])
                     self.cursor.execute(strSQL)
-                    self.conxn.commit()
+                    # self.conxn.commit()
 
                 strSQL = "INSERT INTO [" + tabela + "] VALUES (%s)" % ', '.join(my_list)
                 print(strSQL)
